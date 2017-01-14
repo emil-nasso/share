@@ -8,6 +8,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	pb "gopkg.in/cheggaaa/pb.v1"
 )
 
 //BUFFERSIZE - The size of the buffer for sending files. This amount of bytes will be
@@ -112,6 +114,8 @@ func DownloadFile(connection net.Conn) string {
 	fileName, fileSizeData := getFileNameAndSize(connection)
 	fileSize, _ := strconv.ParseInt(fileSizeData, 10, 64)
 
+	bar := pb.StartNew(int(fileSize))
+
 	newFile, err := os.Create(fileName)
 	CheckError(err)
 
@@ -122,10 +126,13 @@ func DownloadFile(connection net.Conn) string {
 		if (fileSize - receivedBytes) < BUFFERSIZE {
 			io.CopyN(newFile, connection, (fileSize - receivedBytes))
 			connection.Read(make([]byte, (receivedBytes+BUFFERSIZE)-fileSize))
+			bar.Set(100)
+			bar.FinishPrint("Download completed")
 			break
 		}
 		io.CopyN(newFile, connection, BUFFERSIZE)
 		receivedBytes += BUFFERSIZE
+		bar.Set(int(receivedBytes))
 	}
 	log.Println("Received file completely!")
 	return fileName
@@ -138,8 +145,10 @@ func SendFile(connection net.Conn, filePath string) {
 	fileInfo, err := file.Stat()
 	CheckFatalError(err)
 
-	fileSize := strconv.FormatInt(fileInfo.Size(), 10)
+	fileSizeData := fileInfo.Size()
+	fileSize := strconv.FormatInt(fileSizeData, 10)
 	fileName := fileInfo.Name()
+	bar := pb.StartNew(int(fileSizeData))
 
 	sendFileNameAndSize(connection, fileName, fileSize)
 
@@ -148,10 +157,11 @@ func SendFile(connection net.Conn, filePath string) {
 	for {
 		_, err = file.Read(sendBuffer)
 		if err == io.EOF {
+			bar.FinishPrint("Transfer complete")
 			break
 		}
+		bar.Add(BUFFERSIZE)
 		connection.Write(sendBuffer)
 	}
-	log.Println("Transfer complete")
 	return
 }
