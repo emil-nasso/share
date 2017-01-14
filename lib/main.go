@@ -5,6 +5,8 @@ import (
 	"io"
 	"log"
 	"net"
+	"os"
+	"strconv"
 	"strings"
 )
 
@@ -69,4 +71,87 @@ func CheckError(err error) bool {
 		return true
 	}
 	return false
+}
+
+//RelayFileTransfer - TODO
+func RelayFileTransfer(uploader net.Conn, downloader net.Conn) {
+	SendString(uploader, "start", COMMANDSIZE)
+	fileName, fileSizeData := getFileNameAndSize(uploader)
+	sendFileNameAndSize(downloader, fileName, fileSizeData)
+	fileSize, _ := strconv.ParseInt(fileSizeData, 10, 64)
+
+	var receivedBytes int64
+	for {
+		if (fileSize - receivedBytes) < BUFFERSIZE {
+			io.CopyN(downloader, uploader, (fileSize - receivedBytes))
+			//Get the filler bytes
+			io.CopyN(downloader, uploader, (receivedBytes+BUFFERSIZE)-fileSize)
+			break
+		}
+		io.CopyN(downloader, uploader, BUFFERSIZE)
+		receivedBytes += BUFFERSIZE
+	}
+}
+
+func getFileNameAndSize(connection net.Conn) (fileName string, fileSize string) {
+	var err error
+	fileName, err = ReadString(connection, COMMANDSIZE)
+	CheckError(err)
+	fileSizeData, err := ReadString(connection, COMMANDSIZE)
+	CheckError(err)
+	return fileName, fileSizeData
+}
+
+func sendFileNameAndSize(connection net.Conn, fileName string, fileSize string) {
+	SendString(connection, fileName, COMMANDSIZE)
+	SendString(connection, fileSize, COMMANDSIZE)
+}
+
+//DownloadFile - TODO
+func DownloadFile(connection net.Conn) string {
+	fileName, fileSizeData := getFileNameAndSize(connection)
+	fileSize, _ := strconv.ParseInt(fileSizeData, 10, 64)
+
+	newFile, err := os.Create(fileName)
+	CheckError(err)
+
+	defer newFile.Close()
+
+	var receivedBytes int64
+	for {
+		if (fileSize - receivedBytes) < BUFFERSIZE {
+			io.CopyN(newFile, connection, (fileSize - receivedBytes))
+			connection.Read(make([]byte, (receivedBytes+BUFFERSIZE)-fileSize))
+			break
+		}
+		io.CopyN(newFile, connection, BUFFERSIZE)
+		receivedBytes += BUFFERSIZE
+	}
+	log.Println("Received file completely!")
+	return fileName
+}
+
+//SendFile - TODO
+func SendFile(connection net.Conn, filePath string) {
+	file, err := os.Open(filePath)
+	CheckFatalError(err)
+	fileInfo, err := file.Stat()
+	CheckFatalError(err)
+
+	fileSize := strconv.FormatInt(fileInfo.Size(), 10)
+	fileName := fileInfo.Name()
+
+	sendFileNameAndSize(connection, fileName, fileSize)
+
+	log.Println("Transfering file")
+	sendBuffer := make([]byte, BUFFERSIZE)
+	for {
+		_, err = file.Read(sendBuffer)
+		if err == io.EOF {
+			break
+		}
+		connection.Write(sendBuffer)
+	}
+	log.Println("Transfer complete")
+	return
 }

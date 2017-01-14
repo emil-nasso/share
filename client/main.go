@@ -1,11 +1,8 @@
 package client
 
 import (
-	"io"
 	"log"
 	"net"
-	"os"
-	"strconv"
 
 	lib "github.com/emil-nasso/share/lib"
 )
@@ -62,39 +59,20 @@ func (client *Client) RequestUpload() string {
 	return sessionID
 }
 
+//RequestDownload - TODO
+func (client *Client) RequestDownload(sessionID string) {
+	client.checkConnected()
+	lib.SendString(client.connection, "get", lib.COMMANDSIZE)
+	lib.SendString(client.connection, sessionID, lib.COMMANDSIZE)
+	lib.DownloadFile(client.connection)
+}
+
 //WaitAndSendFile - TODO
 func (client *Client) WaitAndSendFile(filePath string) {
 	client.checkConnected()
 	response, err := lib.ReadString(client.connection, lib.COMMANDSIZE)
 	lib.CheckFatalError(err)
 	if response == "start" {
-		client.sendFile(filePath)
+		lib.SendFile(client.connection, filePath)
 	}
-}
-
-func (client *Client) sendFile(filePath string) {
-	client.checkConnected()
-	file, err := os.Open(filePath)
-	lib.CheckFatalError(err)
-	fileInfo, err := file.Stat()
-	lib.CheckFatalError(err)
-
-	fileSize := strconv.FormatInt(fileInfo.Size(), 10)
-	fileName := fileInfo.Name()
-
-	lib.SendString(client.connection, "sendfile", lib.COMMANDSIZE)
-	lib.SendString(client.connection, fileName, lib.COMMANDSIZE)
-	lib.SendString(client.connection, fileSize, lib.COMMANDSIZE)
-
-	log.Println("Transfering file")
-	sendBuffer := make([]byte, lib.BUFFERSIZE)
-	for {
-		_, err = file.Read(sendBuffer)
-		if err == io.EOF {
-			break
-		}
-		client.connection.Write(sendBuffer)
-	}
-	log.Println("Transfer complete")
-	return
 }

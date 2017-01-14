@@ -1,10 +1,9 @@
 package server
 
 import (
-	"io"
 	"log"
+	"math/rand"
 	"net"
-	"os"
 	"strconv"
 
 	lib "github.com/emil-nasso/share/lib"
@@ -13,8 +12,8 @@ import (
 //Uploader - TODO
 //TODO - Gotta remember to clear these out when they disconnect
 type Uploader struct {
-	sessionID string
-	uploader  net.Conn
+	sessionID  string
+	connection net.Conn
 }
 
 //Server - TODO
@@ -66,43 +65,33 @@ commandloop:
 		case "hello":
 			lib.SendString(connection, "zup", lib.COMMANDSIZE)
 		case "sendfile":
-			server.downloadFile(connection)
+			//server.downloadFile(connection)
 		case "upload":
 			sessionID := generateSessionID()
 			lib.SendString(connection, sessionID, lib.COMMANDSIZE)
-			server.uploaders = append(server.uploaders, Uploader{sessionID: sessionID, uploader: connection})
+			server.uploaders = append(server.uploaders, Uploader{sessionID: sessionID, connection: connection})
 			//Spawn a go routine here that checks if the connection is alive, until it's dead,
 			// and remove it from uploaders.
 			break commandloop
+		case "get":
+			sessionID, err := lib.ReadString(connection, lib.COMMANDSIZE)
+			lib.CheckError(err)
+			log.Println("Exchanging file for session", sessionID)
+			uploader := server.findUploaderConnection(sessionID)
+			lib.RelayFileTransfer(uploader, connection)
 		}
 	}
 }
 
-func (server *Server) downloadFile(connection net.Conn) {
-	fileName, err := lib.ReadString(connection, lib.COMMANDSIZE)
-	lib.CheckError(err)
-	fileSizeData, err := lib.ReadString(connection, lib.COMMANDSIZE)
-	lib.CheckError(err)
-	fileSize, _ := strconv.ParseInt(fileSizeData, 10, 64)
-
-	newFile, err := os.Create(fileName)
-	lib.CheckError(err)
-
-	defer newFile.Close()
-
-	var receivedBytes int64
-	for {
-		if (fileSize - receivedBytes) < lib.BUFFERSIZE {
-			io.CopyN(newFile, connection, (fileSize - receivedBytes))
-			connection.Read(make([]byte, (receivedBytes+lib.BUFFERSIZE)-fileSize))
-			break
+func (server *Server) findUploaderConnection(sessionID string) net.Conn {
+	for _, uploader := range server.uploaders {
+		if uploader.sessionID == sessionID {
+			return uploader.connection
 		}
-		io.CopyN(newFile, connection, lib.BUFFERSIZE)
-		receivedBytes += lib.BUFFERSIZE
 	}
-	log.Println("Received file completely!")
+	return nil
 }
 
 func generateSessionID() string {
-	return "this-is-not-very-random"
+	return strconv.Itoa(rand.Intn(899999999) + 100000000)
 }

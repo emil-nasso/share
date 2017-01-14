@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
+	"time"
 
 	client "github.com/emil-nasso/share/client"
 	server "github.com/emil-nasso/share/server"
@@ -11,6 +13,8 @@ import (
 //TODO: Flytta ut dessa konstanterna i communicator structen
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
 	args := os.Args
 	if len(args) <= 1 {
 		fmt.Println(noCommandHelpMessage())
@@ -31,8 +35,19 @@ func main() {
 		for {
 			client.WaitAndSendFile(args[2])
 		}
+	case "download":
+		if len(args) == 3 {
+			var sessionID string
+			sessionID = args[2]
+			fmt.Println("Downloading file for session", sessionID)
+			client := client.New()
+			client.Connect()
+			client.RequestDownload(sessionID)
+		}
 	case "server":
 		server := server.New()
 		server.Start()
+	default:
+		fmt.Println("invalid usage")
 	}
 }
