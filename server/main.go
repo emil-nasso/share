@@ -36,12 +36,12 @@ func (server *Server) Start() error {
 	lib.CheckFatalError(err)
 	defer listener.Close()
 
-	log.Println("File transfer server started. Waiting for connections...")
+	log.Println("File transfer server started. Waiting for connections.")
 	for {
 		connection, err := listener.Accept()
 		lib.CheckError(err)
 
-		log.Println("Client connected from: ", connection.RemoteAddr().String())
+		log.Println("Client connected:", connection.RemoteAddr().String())
 		go server.handleCommands(connection)
 	}
 }
@@ -54,7 +54,7 @@ func (server *Server) handleCommands(connection net.Conn) {
 	}
 	lib.SendString(connection, lib.PROTOCOLVERSION, lib.COMMANDSIZE)
 	if clientVersion != lib.PROTOCOLVERSION {
-		log.Println("Bad client version:", clientVersion, ". Server running version: ", lib.PROTOCOLVERSION)
+		log.Println("Bad client version:", clientVersion, ". Server running version:", lib.PROTOCOLVERSION)
 	}
 
 commandloop:
@@ -64,10 +64,6 @@ commandloop:
 			break
 		}
 		switch command {
-		case "hello":
-			lib.SendString(connection, "zup", lib.COMMANDSIZE)
-		case "sendfile":
-			//server.downloadFile(connection)
 		case "upload":
 			sessionID := generateSessionID()
 			lib.SendString(connection, sessionID, lib.COMMANDSIZE)

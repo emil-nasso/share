@@ -23,16 +23,20 @@ const COMMANDSIZE = 64
 //PROTOCOLVERSION - the current client/server communication protocol version
 const PROTOCOLVERSION = "v1"
 
-func fillString(retunString string, toLength int) string {
+//DebugEnabled - Is debug enabled?
+var DebugEnabled bool
+
+//TODO - there has to be a better way
+func fillString(message string, toLength int) string {
 	for {
-		lengtString := len(retunString)
-		if lengtString < toLength {
-			retunString = retunString + ":"
+		stringLength := len(message)
+		if stringLength < toLength {
+			message = message + ":"
 			continue
 		}
 		break
 	}
-	return retunString
+	return message
 }
 
 //TODO: http://golangtutorials.blogspot.se/2011/06/inheritance-and-subclassing-in-go-or.html
@@ -48,14 +52,14 @@ func ReadString(conn net.Conn, length int) (string, error) {
 		return "", err
 	}
 	response := strings.Trim(string(buffer), ":")
-	log.Println("Read string:", response)
+	Debug("Read string:" + response)
 	return response, nil
 }
 
 //SendString - sends a string to the connection
 func SendString(conn net.Conn, str string, length int) {
 	paddedString := fillString(str, length)
-	log.Println("Sent string: " + str)
+	Debug("Sent string: " + str)
 	conn.Write([]byte(paddedString))
 }
 
@@ -100,13 +104,10 @@ func RelayFileTransfer(uploader net.Conn, downloader net.Conn) {
 func RelayHTTPTransfer(uploader net.Conn, w http.ResponseWriter) {
 	SendString(uploader, "start", COMMANDSIZE)
 	fileName, fileSizeData := getFileNameAndSize(uploader)
-	//sendFileNameAndSize(downloader, fileName, fileSizeData)
 	fileSize, _ := strconv.ParseInt(fileSizeData, 10, 64)
-	//fmt.Fprint(w, fileName)
-	//w.Header().Add("lel", "epic")
 	w.Header().Add("Content-Disposition", "inline; filename=\""+fileName+"\"")
-	//fmt.Fprint(w, fileSize)
 
+	//TODO - move this to a function
 	var receivedBytes int64
 	for {
 		if (fileSize - receivedBytes) < BUFFERSIZE {
@@ -151,7 +152,7 @@ func DownloadFile(connection net.Conn) string {
 		if (fileSize - receivedBytes) < BUFFERSIZE {
 			io.CopyN(newFile, connection, (fileSize - receivedBytes))
 			connection.Read(make([]byte, (receivedBytes+BUFFERSIZE)-fileSize))
-			bar.Set(100)
+			bar.Set(int(fileSize))
 			bar.FinishPrint("Download completed")
 			break
 		}
@@ -159,7 +160,6 @@ func DownloadFile(connection net.Conn) string {
 		receivedBytes += BUFFERSIZE
 		bar.Set(int(receivedBytes))
 	}
-	log.Println("Received file completely!")
 	return fileName
 }
 
@@ -177,11 +177,11 @@ func SendFile(connection net.Conn, filePath string) {
 
 	sendFileNameAndSize(connection, fileName, fileSize)
 
-	log.Println("Transfering file")
 	sendBuffer := make([]byte, BUFFERSIZE)
 	for {
 		_, err = file.Read(sendBuffer)
 		if err == io.EOF {
+			bar.Set(int(fileSizeData))
 			bar.FinishPrint("Transfer complete")
 			break
 		}
@@ -189,4 +189,11 @@ func SendFile(connection net.Conn, filePath string) {
 		connection.Write(sendBuffer)
 	}
 	return
+}
+
+//Debug - TODO
+func Debug(msg string) {
+	if DebugEnabled {
+		log.Println(msg)
+	}
 }

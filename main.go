@@ -1,12 +1,14 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"math/rand"
 	"os"
 	"time"
 
 	client "github.com/emil-nasso/share/client"
+	"github.com/emil-nasso/share/lib"
 	server "github.com/emil-nasso/share/server"
 )
 
@@ -15,37 +17,43 @@ import (
 func main() {
 	rand.Seed(time.Now().UnixNano())
 
-	args := os.Args
-	if len(args) <= 1 {
+	hostname := flag.String("s", "localhost", "the hostname/ip of the server to connect to")
+	lib.DebugEnabled = *flag.Bool("d", false, "show debug information")
+	flag.Parse()
+	command := flag.Arg(0)
+
+	if command == "" {
 		fmt.Println(noCommandHelpMessage())
 		os.Exit(1)
 	}
 
-	switch args[1] {
+	switch command {
 	case "upload":
-		if len(args) != 3 {
+		filePath := flag.Arg(1)
+		if filePath == "" {
 			fmt.Println(missingGetArgumentHelpMessage())
 			os.Exit(1)
 		}
-		client := client.New()
+		client := client.New(*hostname)
 		client.Connect()
 		sessionID := client.RequestUpload()
-		fmt.Printf("SessionID: %v\n\n", sessionID)
+		fmt.Printf("SessionID: %v\n", sessionID)
 		fmt.Printf("Download url:\n http://%s:%d/get/%s\n", client.ServerHostname, 27002, sessionID)
 		fmt.Printf("Download with share:\n share download %v\n", sessionID)
 		defer client.Disconnect()
 		for {
-			client.WaitAndSendFile(args[2])
+			client.WaitAndSendFile(filePath)
 		}
 	case "download":
-		if len(args) == 3 {
-			var sessionID string
-			sessionID = args[2]
-			fmt.Println("Downloading file for session", sessionID)
-			client := client.New()
-			client.Connect()
-			client.RequestDownload(sessionID)
+		sessionID := flag.Arg(1)
+		if sessionID == "" {
+			fmt.Println("No sessionID")
+			os.Exit(1)
 		}
+		fmt.Println("Downloading file for session", sessionID)
+		client := client.New(*hostname)
+		client.Connect()
+		client.RequestDownload(sessionID)
 	case "server":
 		server := server.New()
 		server.Start()

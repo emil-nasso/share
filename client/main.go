@@ -15,8 +15,8 @@ type Client struct {
 }
 
 //New - TODO
-func New() Client {
-	return Client{ServerHostname: "localhost", port: "27001", connection: nil}
+func New(url string) Client {
+	return Client{ServerHostname: url, port: "27001", connection: nil}
 }
 
 //Connect - TODO
@@ -40,7 +40,7 @@ func (client *Client) negotiateVersion() {
 		log.Fatalln(err)
 	}
 	if serverVersion != lib.PROTOCOLVERSION {
-		log.Fatalln("Client/server version mismatch. Server: ", serverVersion, "Client: ", lib.PROTOCOLVERSION)
+		log.Fatalln("Client/server version mismatch. Server:", serverVersion, "Client:", lib.PROTOCOLVERSION)
 	}
 }
 
