@@ -30,11 +30,13 @@ func New() Server {
 
 //Start - Start the server and begin listening for new connections
 func (server *Server) Start() error {
+	go server.startHTTPServer()
+
 	listener, err := net.Listen("tcp", server.ip+":"+server.port)
 	lib.CheckFatalError(err)
 	defer listener.Close()
 
-	log.Println("Server started. Waiting for connections...")
+	log.Println("File transfer server started. Waiting for connections...")
 	for {
 		connection, err := listener.Accept()
 		lib.CheckError(err)

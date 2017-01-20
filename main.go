@@ -30,7 +30,9 @@ func main() {
 		client := client.New()
 		client.Connect()
 		sessionID := client.RequestUpload()
-		fmt.Printf("SessionID: %v\n", sessionID)
+		fmt.Printf("SessionID: %v\n\n", sessionID)
+		fmt.Printf("Download url:\n http://%s:%d/get/%s\n", client.ServerHostname, 27002, sessionID)
+		fmt.Printf("Download with share:\n share download %v\n", sessionID)
 		defer client.Disconnect()
 		for {
 			client.WaitAndSendFile(args[2])

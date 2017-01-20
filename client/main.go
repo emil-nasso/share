@@ -9,19 +9,19 @@ import (
 
 //Client - TODO
 type Client struct {
-	ip         string
-	port       string
-	connection net.Conn
+	ServerHostname string
+	port           string
+	connection     net.Conn
 }
 
 //New - TODO
 func New() Client {
-	return Client{ip: "localhost", port: "27001", connection: nil}
+	return Client{ServerHostname: "localhost", port: "27001", connection: nil}
 }
 
 //Connect - TODO
 func (client *Client) Connect() {
-	connection, err := net.Dial("tcp", client.ip+":"+client.port)
+	connection, err := net.Dial("tcp", client.ServerHostname+":"+client.port)
 	lib.CheckFatalError(err)
 	client.connection = connection
 	client.negotiateVersion()

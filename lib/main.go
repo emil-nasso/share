@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -91,6 +92,30 @@ func RelayFileTransfer(uploader net.Conn, downloader net.Conn) {
 			break
 		}
 		io.CopyN(downloader, uploader, BUFFERSIZE)
+		receivedBytes += BUFFERSIZE
+	}
+}
+
+//RelayHTTPTransfer - TODO
+func RelayHTTPTransfer(uploader net.Conn, w http.ResponseWriter) {
+	SendString(uploader, "start", COMMANDSIZE)
+	fileName, fileSizeData := getFileNameAndSize(uploader)
+	//sendFileNameAndSize(downloader, fileName, fileSizeData)
+	fileSize, _ := strconv.ParseInt(fileSizeData, 10, 64)
+	//fmt.Fprint(w, fileName)
+	//w.Header().Add("lel", "epic")
+	w.Header().Add("Content-Disposition", "inline; filename=\""+fileName+"\"")
+	//fmt.Fprint(w, fileSize)
+
+	var receivedBytes int64
+	for {
+		if (fileSize - receivedBytes) < BUFFERSIZE {
+			io.CopyN(w, uploader, (fileSize - receivedBytes))
+			//Get the filler bytes
+			io.CopyN(w, uploader, (receivedBytes+BUFFERSIZE)-fileSize)
+			break
+		}
+		io.CopyN(w, uploader, BUFFERSIZE)
 		receivedBytes += BUFFERSIZE
 	}
 }
