@@ -12,15 +12,30 @@ import (
 //Uploader - TODO
 //TODO - Gotta remember to clear these out when they disconnect
 type Uploader struct {
-	sessionID  string
-	connection net.Conn
+	sessionID       string
+	connection      net.Conn
+	downloaders     chan *net.Conn
+	downloadersHTTP chan *FileTransferRequest
+}
+
+func (uploader *Uploader) run() {
+	for {
+		//TODO - quit-channel?
+		select {
+		case downloader := <-uploader.downloaders:
+			lib.RelayFileTransfer(uploader.connection, *downloader)
+		case fileTransferRequest := <-uploader.downloadersHTTP:
+			lib.RelayHTTPTransfer(uploader.connection, fileTransferRequest.responseWriter)
+			fileTransferRequest.done <- true
+		}
+	}
 }
 
 //Server - TODO
 type Server struct {
 	ip        string
 	port      string
-	uploaders []Uploader
+	uploaders []*Uploader
 }
 
 //New - Create a new server with standard configuration
@@ -67,24 +82,31 @@ commandloop:
 		case "upload":
 			sessionID := generateSessionID()
 			lib.SendString(connection, sessionID, lib.COMMANDSIZE)
-			server.uploaders = append(server.uploaders, Uploader{sessionID: sessionID, connection: connection})
+			uploader := Uploader{
+				sessionID:       sessionID,
+				connection:      connection,
+				downloaders:     make(chan *net.Conn),
+				downloadersHTTP: make(chan *FileTransferRequest),
+			}
+			server.uploaders = append(server.uploaders, &uploader)
 			//Spawn a go routine here that checks if the connection is alive, until it's dead,
 			// and remove it from uploaders.
+			go uploader.run()
 			break commandloop
 		case "get":
 			sessionID, err := lib.ReadString(connection, lib.COMMANDSIZE)
 			lib.CheckError(err)
 			log.Println("Exchanging file for session", sessionID)
-			uploader := server.findUploaderConnection(sessionID)
-			lib.RelayFileTransfer(uploader, connection)
+			uploader := server.findUploader(sessionID)
+			uploader.downloaders <- &connection
 		}
 	}
 }
 
-func (server *Server) findUploaderConnection(sessionID string) net.Conn {
+func (server *Server) findUploader(sessionID string) *Uploader {
 	for _, uploader := range server.uploaders {
 		if uploader.sessionID == sessionID {
-			return uploader.connection
+			return uploader
 		}
 	}
 	return nil

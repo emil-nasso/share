@@ -103,6 +103,7 @@ func RelayFileTransfer(uploader net.Conn, downloader net.Conn) {
 //RelayHTTPTransfer - TODO
 func RelayHTTPTransfer(uploader net.Conn, w http.ResponseWriter) {
 	SendString(uploader, "start", COMMANDSIZE)
+
 	fileName, fileSizeData := getFileNameAndSize(uploader)
 	fileSize, _ := strconv.ParseInt(fileSizeData, 10, 64)
 	w.Header().Add("Content-Disposition", "inline; filename=\""+fileName+"\"")

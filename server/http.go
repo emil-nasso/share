@@ -5,9 +5,14 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/emil-nasso/share/lib"
 	"github.com/gorilla/mux"
 )
+
+//FileTransferRequest - TODO
+type FileTransferRequest struct {
+	responseWriter http.ResponseWriter
+	done           chan bool
+}
 
 func (server *Server) startHTTPServer() {
 	r := mux.NewRouter()
@@ -32,10 +37,17 @@ func (server *Server) getFileHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	sessionID := vars["session-id"]
 
-	uploader := server.findUploaderConnection(sessionID)
+	uploader := server.findUploader(sessionID)
 	if uploader == nil {
 		http.NotFound(w, r)
 		return
 	}
-	lib.RelayHTTPTransfer(uploader, w)
+	done := make(chan bool)
+	transferRequest := FileTransferRequest{
+		responseWriter: w,
+		done:           done,
+	}
+
+	uploader.downloadersHTTP <- &transferRequest
+	<-done
 }
