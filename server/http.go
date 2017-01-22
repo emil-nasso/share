@@ -1,9 +1,11 @@
 package server
 
 import (
-	"fmt"
+	"html/template"
 	"log"
 	"net/http"
+	"path/filepath"
+	"sync"
 
 	"github.com/gorilla/mux"
 )
@@ -16,21 +18,27 @@ type FileTransferRequest struct {
 
 func (server *Server) startHTTPServer() {
 	r := mux.NewRouter()
-	r.HandleFunc("/status", server.statusHandler)
+	r.HandleFunc("/status", (&templateHandler{filename: "status.html"}).ServeHTTP)
 	r.HandleFunc("/get/{session-id}", server.getFileHandler)
 	http.Handle("/", r)
 	log.Println("Starting http server")
 	go http.ListenAndServe(":27002", nil)
 }
 
-func (server *Server) statusHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "<h1>Statuspage!</h1>")
-	fmt.Fprint(w, "<h3>Sessions</h3>")
-	fmt.Fprint(w, "<ul>")
-	for _, uploader := range server.uploaders {
-		fmt.Fprintf(w, "<li>%v</li>", uploader.sessionID)
-	}
-	fmt.Fprint(w, "</ul>")
+type templateHandler struct {
+	once     sync.Once
+	filename string
+	templ    *template.Template
+}
+
+// ServeHTTP handles the HTTP request.
+func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	t.once.Do(func() {
+		t.templ = template.Must(template.ParseFiles(filepath.Join("templates", t.filename)))
+	})
+	t.templ.Execute(w, struct {
+		Title string
+	}{Title: "This is a statuspage"})
 }
 
 func (server *Server) getFileHandler(w http.ResponseWriter, r *http.Request) {
