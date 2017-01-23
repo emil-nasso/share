@@ -1,0 +1,164 @@
+# Site settings
+baseurl = "https://emil-nasso.github.io/share"
+languageCode = "en-us"
+title = "Share - A simple filesharing application"
+theme = ""
+
+
+[params]
+
+    # You can use Markdown syntax for urls [text](//url.to/source) for
+    # most longer texts.
+
+    # To provide some metadata for search engines feel free to add a few
+    # information about you and your website.
+    name = "Share"
+    description = "Share - a simple filesharing application that can share files between computers and servers behind firewall and nat, written in go."
+
+    # Since this template is static, the contact form uses www.formspree.io as a
+    # proxy. The form makes a POST request to their servers to send the actual
+    # email. Visitors can send up to a 1000 emails each month for free.
+    #
+    # What you need to do for the setup?
+    #
+    # - set your email address under 'email' below
+    # - upload the generated site to your server
+    # - send a dummy email youself to confirm your account
+    # - click the confirm link in the email from www.formspree.io
+    # - you're done. Happy mailing!
+    #email = "your@email.com"
+
+    # Custom assets
+	custom_css = []
+	custom_js  = []
+
+    [params.navigation]
+        brand = "Share - simple filesharing"
+
+
+    [params.header]
+        # Copy your own image into './static/img/'' if you wish
+        image = "profile.png"
+        name = "Share"
+        subtitle = "Share a file or two - Fast and simple - Even behind a firewall"
+        subtitle2 = "A single binary to download - Many OSes supported - Open source - Written in go"
+
+    [params.portfolio]
+        # All projects defined in their own files. You can find example projects
+        # at 'exampleSite/data/projects'. Copy the 'projects' folder into the 'data' directory
+        # at the root of this Hugo site.
+        # For more informtion take a look at the README.
+        title = "Portfolio"
+
+        [params.portfolio.modal]
+            client = "Client"
+            date = "Date"
+            category = "Category"
+            buttontext = "Close"
+
+
+    [params.about]
+        title = "About"
+        # The about text is splitted into a left and right column
+        left = [
+          "A file transfer with share involves three pars, the server, the uploader and the downloader.",
+          "As long as both the downloader and uploader can make outbound connections to the server, the file can be shared, even if they are both behind firewalls or NAT"
+        ]
+        right = [
+          "When run in server mode, share waits for connections from the uploader and then forwards those uploads to the downloader.",
+          "In upload mode, share tells the server that it wants to upload a file and then waits for a downloader.",
+          "To download the file, the you can either run share in download mode or download the file directly from the server via http in any browser or by using curl or wget. When this happens, the server forwards the file from the uploader to the downloader."
+        ]
+        [params.about.example]
+          title = "Example"
+
+          [[params.about.example.content]]
+            title = "Server"
+            description = "Run the server and wait for connections"
+            commands = [
+            "**$(server.example.com)>** share server",
+            "Server started, awaiting connections..."
+            ]
+          [[params.about.example.content]]
+            title = "Uploader"
+            description = "Request to upload a file and get a session id and a download url"
+            commands = [
+            "**$(uploader.example.com)>** share upload server.example.com file.zip",
+            "Session-id: 123456",
+            "Url: http://server.example.com/get/123456"
+            ]
+          [[params.about.example.content]]
+            title = "Downloader"
+            description = "Download the file using the session id, either with the share binary or wget"
+            commands = [
+            "**$(download.example.com)>** share download server.example.com 123456",
+            "Download complete",
+            "**$(download.example.com)>** wget http://server.example.com/get/123456"
+            ]
+
+    [params.download]
+        title = "Download"
+        # The about text is splitted into a left and right column
+        left = ""#Freelancer is a free bootstrap theme created by Start Bootstrap. The download includes the complete source files including HTML, CSS, and JavaScript as well as optional LESS stylesheets for easy customization."
+        right = ""#Whether you're a student looking to showcase your work, a professional looking to attract clients, or a graphic artist looking to share your projects, this template is the perfect starting point!"
+        bottom ="hello"
+        [params.download.button]
+            text = "Download"
+            link = "//github.com/emil-nasso/share/releases/latest"
+            icon = "download"
+
+    [params.usage]
+        title = "How to use"
+        # The about text is splitted into a left and right column
+        middle = "usageinstructions"
+
+
+    [params.contact]
+        title = "Contact"
+
+        # 'error' defines error messages for invalid inputs
+        [params.contact.form.name]
+            text = "Name"
+            error = "Please enter your name."
+
+        [params.contact.form.email]
+            text = "Email Address"
+            error = "Please enter your email address."
+
+        [params.contact.form.phone]
+            text = "Phone Number"
+            error = "Please enter your phone number."
+
+        [params.contact.form.message]
+            text = "Message"
+            error = "Please enter a message."
+
+        [params.contact.form.button]
+            text = "Send"
+
+
+    [params.footer]
+        copyright = "Published under the MIT License."
+
+        [params.footer.location]
+            title = "Location"
+            # Postal address (add as many lines as necessary)
+            address = ["3481 Melrose Place", "Beverly Hills, CA 90210"]
+
+        [params.footer.social]
+            title = "Around the web"
+            # All icons using Fontawesome's icon font. Look at fortawesome.github.io/Font-Awesome/icons/
+            # for more icons. The icons are represented by their corresponding
+            # CSS class.
+            [[params.footer.social.networks]]
+                icon = "fa-github"
+                link = "//github.com/emil-nasso/share"
+
+            [[params.footer.social.networks]]
+                icon = "fa-stack-overflow"
+                link=  "//stackoverflow.com/questions/tagged/share"
+
+
+        [params.footer.credits]
+            title = "About Freelancer"
+            text = "Freelance is a free to use, open source Bootstrap theme created by [Start Bootstrap](//startbootstrap.com)."

@@ -1,0 +1,34 @@
+{{ "<!-- Download Section -->" | safeHTML }}
+<section class="success" id="download">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <h2>{{ with .Site.Params.download.title }}{{.}}{{ end }}</h2>
+                <hr class="star-light">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-4 col-lg-offset-2">
+                <p>{{ with .Site.Params.download.left }}{{ . | markdownify }}{{ end }}</p>
+            </div>
+            <div class="col-lg-4">
+                <p>{{ with .Site.Params.download.right }}{{ . | markdownify }}{{ end }}</p>
+            </div>
+            <div class="col-lg-8 col-lg-offset-2">
+              <p>
+                You can download the latest version of share for your plaform
+                directly from github by clicking the button below.
+              </p>
+              <p>
+                It's the same binary for the server, uploader and downloader, it's small
+                and it has no dependencies!
+              </p>
+            </div>
+            <div class="col-lg-8 col-lg-offset-2 text-center">
+                <a href="{{ with .Site.Params.download.button.link }}{{.}}{{ end }}" class="btn btn-lg btn-outline">
+                    <i class="fa fa-{{ with .Site.Params.download.button.icon }}{{.}}{{end}}"></i> {{ with .Site.Params.download.button.text }}{{ . }}{{ end }}
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
