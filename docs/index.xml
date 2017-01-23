@@ -2,11 +2,11 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Share - A simple filesharing application</title>
-    <link>https://example.org/index.xml</link>
+    <link>https://emil-nasso.github.io/share/index.xml</link>
     <description>Recent content on Share - A simple filesharing application</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <atom:link href="https://example.org/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="https://emil-nasso.github.io/share/index.xml" rel="self" type="application/rss+xml" />
     
   </channel>
 </rss>
