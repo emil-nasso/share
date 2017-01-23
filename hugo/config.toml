@@ -1,5 +1,5 @@
 # Site settings
-baseurl = "https://emil-nasso.github.io/share"
+baseurl = "https://emil-nasso.github.io/share/"
 languageCode = "en-us"
 title = "Share - A simple filesharing application"
 theme = ""
