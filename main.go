@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	client "github.com/emil-nasso/share/client"
+	"github.com/emil-nasso/share/client"
 	"github.com/emil-nasso/share/lib"
-	server "github.com/emil-nasso/share/server"
+	"github.com/emil-nasso/share/server"
 )
 
 //TODO: Flytta ut dessa konstanterna i communicator structen

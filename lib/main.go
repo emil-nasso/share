@@ -15,19 +15,6 @@ const PROTOCOLVERSION = "v1"
 //DebugEnabled - Is debug enabled?
 var DebugEnabled bool
 
-//FillString - TODO There has to be a better way
-func FillString(message string, toLength int) string {
-	for {
-		stringLength := len(message)
-		if stringLength < toLength {
-			message = message + ":"
-			continue
-		}
-		break
-	}
-	return message
-}
-
 //TODO: http://golangtutorials.blogspot.se/2011/06/inheritance-and-subclassing-in-go-or.html
 // lägg ut send och read i en struct, en communicator, använd "arv" för att både servern och klienten ska ha tillgång till den
 

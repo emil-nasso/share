@@ -71,13 +71,13 @@ func (c *Client) downloadFile() string {
 	var receivedBytes int64
 	for {
 		if (fileSize - receivedBytes) < lib.BUFFERSIZE {
-			io.CopyN(newFile, c.serverConnection.Connection, (fileSize - receivedBytes))
-			c.serverConnection.Connection.Read(make([]byte, (receivedBytes+lib.BUFFERSIZE)-fileSize))
+			io.CopyN(newFile, c.serverConnection, (fileSize - receivedBytes))
+			c.serverConnection.Read(make([]byte, (receivedBytes+lib.BUFFERSIZE)-fileSize))
 			bar.Set(int(fileSize))
 			bar.FinishPrint("Download completed")
 			break
 		}
-		io.CopyN(newFile, c.serverConnection.Connection, lib.BUFFERSIZE)
+		io.CopyN(newFile, c.serverConnection, lib.BUFFERSIZE)
 		receivedBytes += lib.BUFFERSIZE
 		bar.Set(int(receivedBytes))
 	}
@@ -106,7 +106,7 @@ func (c *Client) uploadFile(filePath string) {
 			break
 		}
 		bar.Add(lib.BUFFERSIZE)
-		c.serverConnection.Connection.Write(sendBuffer)
+		c.serverConnection.Write(sendBuffer)
 	}
 	return
 }

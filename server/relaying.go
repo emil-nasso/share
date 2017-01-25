@@ -12,14 +12,14 @@ import (
 func relayFileTransfer(uploader *conn.ShareConnection, downloader *conn.ShareConnection) {
 	fileName, fileSizeStr, fileSize := initializeFileTransfer(uploader)
 	downloader.SendFileNameAndSize(fileName, fileSizeStr)
-	copy(uploader.Connection, downloader.Connection, fileSize)
+	copy(uploader, downloader, fileSize)
 }
 
 //RelayHTTPTransfer - TODO
 func relayHTTPTransfer(uploader *conn.ShareConnection, w http.ResponseWriter) {
 	fileName, _, fileSize := initializeFileTransfer(uploader)
 	w.Header().Add("Content-Disposition", "inline; filename=\""+fileName+"\"")
-	copy(uploader.Connection, w, fileSize)
+	copy(uploader, w, fileSize)
 }
 
 func initializeFileTransfer(uploader *conn.ShareConnection) (fileName, sizeStr string, sizeInt int64) {

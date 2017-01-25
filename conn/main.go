@@ -12,7 +12,17 @@ import (
 
 //ShareConnection - TODO
 type ShareConnection struct {
-	Connection net.Conn
+	connection net.Conn
+}
+
+//Read - Implementation of the io.Reader interface
+func (s *ShareConnection) Read(p []byte) (n int, err error) {
+	return s.Read(p)
+}
+
+//Write - Implementation of the io.Writer interface
+func (s *ShareConnection) Write(p []byte) (n int, err error) {
+	return s.Write(p)
 }
 
 //Connect - TODO
@@ -20,7 +30,7 @@ func Connect(hostname, port string) *ShareConnection {
 	connection, err := net.Dial("tcp", hostname+":"+port)
 	lib.CheckFatalError(err)
 
-	s := &ShareConnection{Connection: connection}
+	s := &ShareConnection{connection: connection}
 	s.NegotiateVersion()
 	return s
 }
@@ -28,7 +38,7 @@ func Connect(hostname, port string) *ShareConnection {
 //New - Create a ShareConnection based on an existing net.Conn
 func New(connection net.Conn) *ShareConnection {
 	return &ShareConnection{
-		Connection: connection,
+		connection: connection,
 	}
 }
 
@@ -47,15 +57,15 @@ func (s *ShareConnection) NegotiateVersion() {
 
 //CheckConnected - TODO
 func (s *ShareConnection) CheckConnected() {
-	if s.Connection == nil {
+	if s.connection == nil {
 		panic("Not connected")
 	}
 }
 
 //Disconnect - TODO
 func (s *ShareConnection) Disconnect() {
-	s.Connection.Close()
-	s.Connection = nil
+	s.connection.Close()
+	s.connection = nil
 }
 
 //GetFileNameAndSize - TODO
@@ -77,7 +87,7 @@ func (s *ShareConnection) SendFileNameAndSize(fileName string, fileSize string) 
 //ReadString - Reads a string from the Connection
 func (s *ShareConnection) ReadString(length int) (string, error) {
 	buffer := make([]byte, length)
-	_, err := s.Connection.Read(buffer)
+	_, err := s.connection.Read(buffer)
 	if err == io.EOF {
 		return "", errors.New("Connection closed")
 	} else if err != nil {
@@ -90,7 +100,20 @@ func (s *ShareConnection) ReadString(length int) (string, error) {
 
 //SendString - sends a string to the Connection
 func (s *ShareConnection) SendString(str string, length int) {
-	paddedString := lib.FillString(str, length)
+	paddedString := fillString(str, length)
 	lib.Debug("Sent string: " + str)
-	s.Connection.Write([]byte(paddedString))
+	s.connection.Write([]byte(paddedString))
+}
+
+//FillString - TODO There has to be a better way
+func fillString(message string, toLength int) string {
+	for {
+		stringLength := len(message)
+		if stringLength < toLength {
+			message = message + ":"
+			continue
+		}
+		break
+	}
+	return message
 }
