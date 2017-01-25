@@ -6,6 +6,7 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/emil-nasso/share/conn"
 	lib "github.com/emil-nasso/share/lib"
 )
 
@@ -13,8 +14,8 @@ import (
 //TODO - Gotta remember to clear these out when they disconnect
 type Uploader struct {
 	sessionID       string
-	connection      net.Conn
-	downloaders     chan *net.Conn
+	connection      *conn.ShareConnection
+	downloaders     chan *conn.ShareConnection
 	downloadersHTTP chan *FileTransferRequest
 }
 
@@ -23,9 +24,9 @@ func (uploader *Uploader) run() {
 		//TODO - quit-channel?
 		select {
 		case downloader := <-uploader.downloaders:
-			lib.RelayFileTransfer(uploader.connection, *downloader)
+			relayFileTransfer(uploader.connection, downloader)
 		case fileTransferRequest := <-uploader.downloadersHTTP:
-			lib.RelayHTTPTransfer(uploader.connection, fileTransferRequest.responseWriter)
+			relayHTTPTransfer(uploader.connection, fileTransferRequest.responseWriter)
 			fileTransferRequest.done <- true
 		}
 	}
@@ -61,31 +62,32 @@ func (server *Server) Start() error {
 	}
 }
 
-func (server *Server) handleCommands(connection net.Conn) {
+func (server *Server) handleCommands(c net.Conn) {
+	connection := conn.New(c)
 	//	defer connection.Close()
-	clientVersion, err := lib.ReadString(connection, lib.COMMANDSIZE)
+	clientVersion, err := connection.ReadString(lib.COMMANDSIZE)
 	if lib.CheckError(err) {
 		return
 	}
-	lib.SendString(connection, lib.PROTOCOLVERSION, lib.COMMANDSIZE)
+	connection.SendString(lib.PROTOCOLVERSION, lib.COMMANDSIZE)
 	if clientVersion != lib.PROTOCOLVERSION {
 		log.Println("Bad client version:", clientVersion, ". Server running version:", lib.PROTOCOLVERSION)
 	}
 
 commandloop:
 	for {
-		command, err := lib.ReadString(connection, lib.COMMANDSIZE)
+		command, err := connection.ReadString(lib.COMMANDSIZE)
 		if lib.CheckError(err) {
 			break
 		}
 		switch command {
 		case "upload":
 			sessionID := generateSessionID()
-			lib.SendString(connection, sessionID, lib.COMMANDSIZE)
+			connection.SendString(sessionID, lib.COMMANDSIZE)
 			uploader := Uploader{
 				sessionID:       sessionID,
 				connection:      connection,
-				downloaders:     make(chan *net.Conn),
+				downloaders:     make(chan *conn.ShareConnection),
 				downloadersHTTP: make(chan *FileTransferRequest),
 			}
 			server.uploaders = append(server.uploaders, &uploader)
@@ -94,11 +96,11 @@ commandloop:
 			go uploader.run()
 			break commandloop
 		case "get":
-			sessionID, err := lib.ReadString(connection, lib.COMMANDSIZE)
+			sessionID, err := connection.ReadString(lib.COMMANDSIZE)
 			lib.CheckError(err)
 			log.Println("Exchanging file for session", sessionID)
 			uploader := server.findUploader(sessionID)
-			uploader.downloaders <- &connection
+			uploader.downloaders <- connection
 		}
 	}
 }

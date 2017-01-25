@@ -35,7 +35,6 @@ func main() {
 			os.Exit(1)
 		}
 		client := client.New(*hostname)
-		client.Connect()
 		sessionID := client.RequestUpload()
 		fmt.Printf("SessionID: %v\n", sessionID)
 		fmt.Printf("Download url:\n http://%s:%d/get/%s\n", client.ServerHostname, 27002, sessionID)
@@ -52,7 +51,7 @@ func main() {
 		}
 		fmt.Println("Downloading file for session", sessionID)
 		client := client.New(*hostname)
-		client.Connect()
+		defer client.Disconnect()
 		client.RequestDownload(sessionID)
 	case "server":
 		server := server.New()

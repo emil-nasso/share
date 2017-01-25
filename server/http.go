@@ -18,7 +18,7 @@ type FileTransferRequest struct {
 
 func (server *Server) startHTTPServer() {
 	r := mux.NewRouter()
-	r.HandleFunc("/status", (&templateHandler{filename: "status.html"}).ServeHTTP)
+	r.HandleFunc("/status", (&templateHandler{filename: "status.html"}).serveHTTP)
 	r.HandleFunc("/get/{session-id}", server.getFileHandler)
 	http.Handle("/", r)
 	log.Println("Starting http server")
@@ -31,8 +31,7 @@ type templateHandler struct {
 	templ    *template.Template
 }
 
-// ServeHTTP handles the HTTP request.
-func (t *templateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (t *templateHandler) serveHTTP(w http.ResponseWriter, r *http.Request) {
 	t.once.Do(func() {
 		t.templ = template.Must(template.ParseFiles(filepath.Join("templates", t.filename)))
 	})
