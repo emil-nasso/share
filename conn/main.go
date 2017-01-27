@@ -17,12 +17,12 @@ type ShareConnection struct {
 
 //Read - Implementation of the io.Reader interface
 func (s *ShareConnection) Read(p []byte) (n int, err error) {
-	return s.Read(p)
+	return s.connection.Read(p)
 }
 
 //Write - Implementation of the io.Writer interface
 func (s *ShareConnection) Write(p []byte) (n int, err error) {
-	return s.Write(p)
+	return s.connection.Write(p)
 }
 
 //Connect - TODO
