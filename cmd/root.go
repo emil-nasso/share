@@ -46,13 +46,13 @@ func onConfigLoaded() {
 func init() {
 	rand.Seed(time.Now().UnixNano())
 	cobra.OnInitialize(initConfig)
-	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.test-cobra.yaml)")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.share.yaml)")
 	RootCmd.PersistentFlags().BoolP("debug", "d", false, "Show debug information")
 	viper.BindPFlag("debug", RootCmd.PersistentFlags().Lookup("debug"))
 }
 
 func initConfig() {
-	viper.SetConfigName(".test-cobra")
+	viper.SetConfigName(".share")
 	viper.AddConfigPath("$HOME")
 
 	if cfgFile != "" {
