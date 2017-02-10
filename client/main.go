@@ -1,13 +1,13 @@
 package client
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"strconv"
 
-	pb "gopkg.in/cheggaaa/pb.v1"
-
 	"github.com/emil-nasso/share/conn"
+	"github.com/emil-nasso/share/ftpb"
 	lib "github.com/emil-nasso/share/lib"
 )
 
@@ -61,7 +61,7 @@ func (c *Client) downloadFile() string {
 	fileName, fileSizeData := c.serverConnection.GetFileNameAndSize()
 	fileSize, _ := strconv.ParseInt(fileSizeData, 10, 64)
 
-	bar := pb.StartNew(int(fileSize))
+	bar := ftpb.New(int64(fileSize))
 
 	newFile, err := os.Create(fileName)
 	lib.CheckError(err)
@@ -73,13 +73,13 @@ func (c *Client) downloadFile() string {
 		if (fileSize - receivedBytes) < lib.BUFFERSIZE {
 			io.CopyN(newFile, c.serverConnection, (fileSize - receivedBytes))
 			c.serverConnection.Read(make([]byte, (receivedBytes+lib.BUFFERSIZE)-fileSize))
-			bar.Set(int(fileSize))
-			bar.FinishPrint("Download completed")
+			bar.Done()
+			fmt.Println("Download completed")
 			break
 		}
 		io.CopyN(newFile, c.serverConnection, lib.BUFFERSIZE)
 		receivedBytes += lib.BUFFERSIZE
-		bar.Set(int(receivedBytes))
+		bar.Set(int64(receivedBytes))
 	}
 	return fileName
 }
@@ -93,7 +93,7 @@ func (c *Client) uploadFile(filePath string) {
 	fileSizeData := fileInfo.Size()
 	fileSize := strconv.FormatInt(fileSizeData, 10)
 	fileName := fileInfo.Name()
-	bar := pb.StartNew(int(fileSizeData))
+	bar := ftpb.New(int64(fileSizeData))
 
 	c.serverConnection.SendFileNameAndSize(fileName, fileSize)
 
@@ -101,11 +101,11 @@ func (c *Client) uploadFile(filePath string) {
 	for {
 		_, err = file.Read(sendBuffer)
 		if err == io.EOF {
-			bar.Set(int(fileSizeData))
-			bar.FinishPrint("Transfer complete")
+			bar.Set(int64(fileSizeData))
+			fmt.Println("Transfer complete")
 			break
 		}
-		bar.Add(lib.BUFFERSIZE)
+		bar.Increase(lib.BUFFERSIZE)
 		c.serverConnection.Write(sendBuffer)
 	}
 	return

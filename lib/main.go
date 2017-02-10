@@ -15,9 +15,6 @@ const PROTOCOLVERSION = "v1"
 //DebugEnabled - Is debug enabled?
 var DebugEnabled bool
 
-//TODO: http://golangtutorials.blogspot.se/2011/06/inheritance-and-subclassing-in-go-or.html
-// lägg ut send och read i en struct, en communicator, använd "arv" för att både servern och klienten ska ha tillgång till den
-
 //CheckFatalError - checks if the error is non-nil and logs a fatal error (exiting)
 func CheckFatalError(err error) {
 	if err != nil {
