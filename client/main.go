@@ -53,8 +53,10 @@ func (c *Client) WaitAndSendFile(filePath string) {
 	response, err := c.serverConnection.ReadString(lib.COMMANDSIZE)
 	lib.CheckFatalError(err)
 	if response == "start" {
+		fmt.Println("Starting upload")
 		c.uploadFile(filePath)
 	}
+	fmt.Println("Done with upload")
 }
 
 func (c *Client) downloadFile() string {
@@ -62,6 +64,7 @@ func (c *Client) downloadFile() string {
 	fileSize, _ := strconv.ParseInt(fileSizeData, 10, 64)
 
 	bar := ftpb.New(int64(fileSize))
+	bar.Start()
 
 	newFile, err := os.Create(fileName)
 	lib.CheckError(err)
@@ -70,9 +73,10 @@ func (c *Client) downloadFile() string {
 
 	var receivedBytes int64
 	for {
-		if (fileSize - receivedBytes) < lib.BUFFERSIZE {
-			io.CopyN(newFile, c.serverConnection, (fileSize - receivedBytes))
-			c.serverConnection.Read(make([]byte, (receivedBytes+lib.BUFFERSIZE)-fileSize))
+		if (fileSize - receivedBytes) <= lib.BUFFERSIZE {
+			bytesLeft := (fileSize - receivedBytes)
+			io.CopyN(newFile, c.serverConnection, bytesLeft)
+			c.serverConnection.Read(make([]byte, lib.BUFFERSIZE-bytesLeft))
 			bar.Done()
 			fmt.Println("Download completed")
 			break
@@ -94,6 +98,7 @@ func (c *Client) uploadFile(filePath string) {
 	fileSize := strconv.FormatInt(fileSizeData, 10)
 	fileName := fileInfo.Name()
 	bar := ftpb.New(int64(fileSizeData))
+	bar.Start()
 
 	c.serverConnection.SendFileNameAndSize(fileName, fileSize)
 
@@ -101,12 +106,12 @@ func (c *Client) uploadFile(filePath string) {
 	for {
 		_, err = file.Read(sendBuffer)
 		if err == io.EOF {
-			bar.Set(int64(fileSizeData))
-			fmt.Println("Transfer complete")
 			break
 		}
 		bar.Increase(lib.BUFFERSIZE)
 		c.serverConnection.Write(sendBuffer)
 	}
+	bar.Done()
+	fmt.Println("Transfer complete")
 	return
 }

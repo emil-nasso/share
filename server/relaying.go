@@ -32,7 +32,7 @@ func initializeFileTransfer(uploader *conn.ShareConnection) (fileName, sizeStr s
 func copy(src io.Reader, dst io.Writer, fileSize int64) {
 	var receivedBytes int64
 	for {
-		if (fileSize - receivedBytes) < lib.BUFFERSIZE {
+		if (fileSize - receivedBytes) <= lib.BUFFERSIZE {
 			io.CopyN(dst, src, (fileSize - receivedBytes))
 			//Get the filler bytes
 			io.CopyN(dst, src, (receivedBytes+lib.BUFFERSIZE)-fileSize)

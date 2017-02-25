@@ -54,10 +54,10 @@ func (f *FileTransferProgressBar) Start() {
 		for {
 			select {
 			case <-f.stop:
+				f.render()
 				return
 			default:
 				f.render()
-				time.Sleep(time.Millisecond * 5)
 			}
 		}
 	}()
@@ -68,6 +68,7 @@ func (f *FileTransferProgressBar) render() {
 		fmt.Fprintln(f.byteBuffer, f.generate())
 	} else {
 		fmt.Fprintln(f.writer, f.generate())
+		time.Sleep(time.Millisecond * 200)
 	}
 }
 
@@ -100,14 +101,14 @@ func (f *FileTransferProgressBar) updateDoneBytes(v int64) {
 	}
 }
 
-// Done sets the progressbar to 100%
+// Done sets the progressbar to 100% and close the progressbar
 func (f *FileTransferProgressBar) Done() {
 	f.doneBytes = f.totalBytes
 	if f.started {
 		f.stop <- true
-		f.render()
 		f.writer.Stop()
 	} else {
 		f.render()
 	}
+	time.Sleep(100 * time.Millisecond)
 }
